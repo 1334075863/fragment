@@ -4,6 +4,10 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
+import com.whales.fragment.MyApp;
+
+import timber.log.Timber;
+
 /**
  * Created on 2019/07/31
  *
