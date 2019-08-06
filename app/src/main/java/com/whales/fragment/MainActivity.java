@@ -2,32 +2,44 @@ package com.whales.fragment;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.PersistableBundle;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.blankj.utilcode.util.ToastUtils;
 import com.whales.fragment.base.BaseActivity;
+import com.whales.fragment.fragment.LocationFragment;
+import com.whales.fragment.fragment.MainFragment;
+import com.whales.fragment.fragment.MyselfFragment;
+import com.whales.fragment.fragment.OtherFragment;
 
 import timber.log.Timber;
 
 public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     private LinearLayout mLr_main, mLr_other, mLr_location, mLr_myself;
+    private FrameLayout mFlview;
     private ImageView mIv_bottom;
     private TextView mTv_bottom;
     private ImageView mIv_main, mIv_other, mIv_location, mIv_myself;
     private TextView mTv_main, mTV_other, mTv_location, mTv_myself;
     boolean isChecked;
     View mView;
+    private MainFragment mMainFragment;
+    private OtherFragment mOtherFragment;
+    private LocationFragment mLocationFragment;
+    private MyselfFragment mMyselfFragment;
 
     private int mainState;
     private int otherState;
     private int locationState;
     private int myselfState;
 
+    private int FRAGMENT_ID = 1;
     private static final int SELECT_TAB_STATE = 1;
     private static final int UNSELECT_TAB_STATE = 0;
 
@@ -35,12 +47,15 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initView();
 
-        setTabSelectMain();
+        initView();
         initClick();
 
-
+        if (savedInstanceState == null){
+            setFragment(0);
+            setTabSelectMain();
+            showAllTabWithState();
+        }
         Timber.d("inttMainActivity");
     }
 
@@ -62,6 +77,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         mTV_other = findViewById(R.id.tv_other);
         mTv_myself = findViewById(R.id.tv_myself);
 
+        mFlview = findViewById(R.id.fl_view);
     }
 
     private void initClick() {
@@ -76,33 +92,27 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.lr_main:
+                setFragment(0);
                 setTabSelectMain();
                 Timber.d("onClick0");
                 break;
             case R.id.lr_other:
+                setFragment(1);
                 setTabSelectOther();
                 Timber.d("onClick1");
                 break;
             case R.id.lr_location:
+                setFragment(2);
                 setTabSelectLocation();
                 Timber.d("onClick2 ");
                 break;
             case R.id.lr_myself:
+                setFragment(3);
                 setTabSelectMyself();
                 Timber.d("onClick3  ");
                 break;
         }
         showAllTabWithState();
-    }
-
-    private void changeBackground(View view) {
-        if (mView == null) mView = view;
-
-        if (!(mView == view)) {
-            mView.setBackgroundColor(Color.RED);
-        }
-        view.setBackgroundColor(Color.BLUE);
-        mView = view;
     }
 
 
@@ -197,5 +207,76 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         otherState = UNSELECT_TAB_STATE;
         locationState = UNSELECT_TAB_STATE;
         myselfState = SELECT_TAB_STATE;
+    }
+
+    private void hideFragmentSelect(FragmentTransaction fragmentTransaction){
+        if (mMainFragment != null)fragmentTransaction.hide(mMainFragment);
+        if (mOtherFragment != null)fragmentTransaction.hide(mOtherFragment);
+        if (mLocationFragment != null)fragmentTransaction.hide(mLocationFragment);
+        if (mMyselfFragment != null)fragmentTransaction.hide(mMyselfFragment);
+    }
+
+    private void setFragment(int index){
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        hideFragmentSelect(fragmentTransaction);
+
+        switch (index){
+            case 0:
+                FRAGMENT_ID = 0;
+                if (mMainFragment == null){
+                    mMainFragment = new MainFragment();
+                    fragmentTransaction.add(R.id.fl_view,mMainFragment,"main_fragment");
+                }else {
+                    fragmentTransaction.show(mMainFragment);
+                }
+                break;
+            case 1:
+                FRAGMENT_ID = 1;
+                if (mOtherFragment == null){
+                    mOtherFragment = new OtherFragment();
+                    fragmentTransaction.add(R.id.fl_view,mOtherFragment,"other_fragment");
+                }else {
+                    fragmentTransaction.show(mOtherFragment);
+                }
+                break;
+            case 2:
+                FRAGMENT_ID = 2;
+                if (mLocationFragment == null){
+                    mLocationFragment = new LocationFragment();
+                    fragmentTransaction.add(R.id.fl_view,mLocationFragment,"location_fragment");
+                }else {
+                    fragmentTransaction.show(mLocationFragment);
+                }
+                break;
+            case 3:
+                FRAGMENT_ID = 3;
+                if (mMyselfFragment == null){
+                    mMyselfFragment = new MyselfFragment();
+                    fragmentTransaction.add(R.id.fl_view,mMyselfFragment,"myself_fragment");
+                }else {
+                    fragmentTransaction.show(mMyselfFragment);
+                }
+                break;
+        }
+        fragmentTransaction.commit();
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        mMainFragment = (MainFragment)fragmentManager.findFragmentByTag("main_fragment");
+        mOtherFragment = (OtherFragment) fragmentManager.findFragmentByTag("other_fragment");
+        mLocationFragment = (LocationFragment) fragmentManager.findFragmentByTag("location_fragment");
+        mMyselfFragment = (MyselfFragment) fragmentManager.findFragmentByTag("myself_fragment");
+
+        setFragment(savedInstanceState.getInt("fragment_id"));
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putInt("fragment_id",FRAGMENT_ID);
+        super.onSaveInstanceState(outState);
     }
 }
